@@ -8,10 +8,12 @@ Live at: `https://jonstacks-commits.github.io/foundation-one-pager/`
 
 ```
 foundation-one-pager/
-├── index.html                       # landing page: embeds the PDF, view/download buttons
+├── index.html                       # landing page: embeds the one-pager PDF, view/download buttons
+├── research.html                    # page-by-page viewer for the full 25-page research report
 ├── styles.css                       # Specialized Foundation teal/black/white palette
 ├── assets/
-│   ├── TSF-One-Pager-DRAFT.pdf      # source document
+│   ├── TSF-One-Pager-DRAFT.pdf      # source one-pager
+│   ├── TSF-Research-Report.pdf      # full research report (46 MB, 25 pages)
 │   └── tsf-preview.jpg              # page-1 thumbnail, used for link previews (og:image)
 └── README.md
 ```
@@ -28,6 +30,8 @@ foundation-one-pager/
 ## Before making the repo public
 
 The PDF and this page carry **Specialized Foundation** branding, staff quotes (Lawrence Kovacs, Anne Rock, Jesse Sorenson), and photographs of students. Confirm you have the Foundation's sign-off to publish these externally before flipping the repo to public — once Pages is live, the PDF and image in `assets/` are publicly fetchable regardless of any link-sharing controls on the page itself.
+
+The same applies to `TSF-Research-Report.pdf` — it's the same Foundation's branded material, so the same permission check covers it. Note also it's 46 MB; GitHub allows it (under the 100 MB per-file limit) but `research.html` renders it page-by-page via PDF.js rather than loading the whole file into an iframe, to keep it usable on mobile.
 
 ## Reusing this pattern
 
