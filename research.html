@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Research Report — The Specialized Foundation</title>
+<meta name="description" content="The Specialized Foundation's full Riding for Focus research report — primary and applied research across seven schools, 1,000+ students, and 42,000 rides.">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .viewer-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--ink);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 16px;
+    border-radius: 8px 8px 0 0;
+    font-size: 14px;
+  }
+  .viewer-toolbar button {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .viewer-toolbar button:hover { background: rgba(255,255,255,0.12); }
+  .viewer-toolbar button:disabled { opacity: 0.35; cursor: default; }
+  .page-indicator { flex: 1; text-align: center; font-variant-numeric: tabular-nums; }
+  .viewer-body {
+    background: #2b3538;
+    padding: 24px 0;
+    display: flex;
+    justify-content: center;
+    min-height: 60vh;
+  }
+  .page-canvas-wrap { background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.25); }
+  canvas { display: block; max-width: 100%; height: auto; }
+  .load-status {
+    color: #cfd8da;
+    font-size: 14px;
+    padding: 40px 0;
+    text-align: center;
+  }
+  .back-link {
+    display: inline-block;
+    margin-bottom: 20px;
+    font-size: 14px;
+  }
+  .thumb-strip {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 10px 16px;
+    background: var(--ink);
+    border-radius: 0 0 8px 8px;
+  }
+  .thumb-strip button {
+    flex: 0 0 auto;
+    width: 40px;
+    height: 52px;
+    border-radius: 3px;
+    border: 2px solid rgba(255,255,255,0.15);
+    background: #fff;
+    color: var(--ink);
+    font-size: 11px;
+    cursor: pointer;
+    padding: 0;
+  }
+  .thumb-strip button.active { border-color: var(--teal); }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="mark" aria-hidden="true">
+      <svg viewBox="0 0 40 40" width="34" height="34">
+        <path d="M20 3 C20 3 8 16 8 25 C8 32 13.5 37 20 37 C26.5 37 32 32 32 25 C32 16 20 3 20 3 Z" fill="none" stroke="currentColor" stroke-width="2.4"/>
+        <circle cx="20" cy="25" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/>
+      </svg>
+    </div>
+    <div class="header-text">
+      <p class="eyebrow">The Specialized Foundation</p>
+      <h1>Research Report</h1>
+    </div>
+  </div>
+</header>
+
+<main>
+  <a class="back-link" href="index.html">&larr; Back to the one-pager</a>
+
+  <section class="intro">
+    <p class="lede">The full study behind Riding for Focus: primary research on brain activity during cycling, and applied research measuring outcomes across seven schools, 1,000+ students, and 42,000 rides.</p>
+    <div class="actions">
+      <a class="btn btn-secondary" href="assets/TSF-Research-Report.pdf" download>Download full PDF (46 MB)</a>
+    </div>
+  </section>
+
+  <section class="viewer-wrap">
+    <div class="viewer-frame" style="padding: 0;">
+      <div class="viewer-toolbar">
+        <button id="prevBtn" aria-label="Previous page">&larr; Prev</button>
+        <span class="page-indicator" id="pageIndicator">Loading&hellip;</span>
+        <button id="nextBtn" aria-label="Next page">Next &rarr;</button>
+        <button id="zoomOutBtn" aria-label="Zoom out">&minus;</button>
+        <button id="zoomInBtn" aria-label="Zoom in">+</button>
+      </div>
+      <div class="viewer-body">
+        <div id="loadStatus" class="load-status">Loading report&hellip; this is a 46&nbsp;MB file, so the first page may take a few seconds.</div>
+        <div class="page-canvas-wrap" id="canvasWrap" style="display:none;">
+          <canvas id="pdfCanvas"></canvas>
+        </div>
+      </div>
+      <div class="thumb-strip" id="thumbStrip"></div>
+    </div>
+    <p class="viewer-caption">Pages render one at a time to keep this fast on mobile. Use Download for the full document offline.</p>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div>
+      <p class="footer-org">The Specialized Foundation</p>
+      <p>15130 Concord Circle, Morgan Hill, CA 95037</p>
+      <p>408 776 4900 &middot; <a href="mailto:foundation@specializedfoundation.org">foundation@specializedfoundation.org</a></p>
+    </div>
+    <div>
+      <a href="https://www.specializedfoundation.org" target="_blank" rel="noopener">specializedfoundation.org</a>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.js"></script>
+<script>
+(function () {
+  const PDF_URL = 'assets/TSF-Research-Report.pdf';
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.js';
+
+  let pdfDoc = null;
+  let pageNum = 1;
+  let scale = 1.1;
+  let rendering = false;
+
+  const canvas = document.getElementById('pdfCanvas');
+  const ctx = canvas.getContext('2d');
+  const loadStatus = document.getElementById('loadStatus');
+  const canvasWrap = document.getElementById('canvasWrap');
+  const pageIndicator = document.getElementById('pageIndicator');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const zoomInBtn = document.getElementById('zoomInBtn');
+  const zoomOutBtn = document.getElementById('zoomOutBtn');
+  const thumbStrip = document.getElementById('thumbStrip');
+
+  function renderPage(num) {
+    if (!pdfDoc) return;
+    rendering = true;
+    pageIndicator.textContent = `Page ${num} / ${pdfDoc.numPages}`;
+    pdfDoc.getPage(num).then(function (page) {
+      const viewport = page.getViewport({ scale: scale });
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const renderTask = page.render({ canvasContext: ctx, viewport: viewport });
+      renderTask.promise.then(function () {
+        rendering = false;
+        loadStatus.style.display = 'none';
+        canvasWrap.style.display = 'block';
+        prevBtn.disabled = num <= 1;
+        nextBtn.disabled = num >= pdfDoc.numPages;
+        highlightThumb(num);
+      });
+    });
+  }
+
+  function highlightThumb(num) {
+    Array.from(thumbStrip.children).forEach(function (btn, i) {
+      btn.classList.toggle('active', i + 1 === num);
+    });
+  }
+
+  function buildThumbs(count) {
+    thumbStrip.innerHTML = '';
+    for (let i = 1; i <= count; i++) {
+      const b = document.createElement('button');
+      b.textContent = i;
+      b.addEventListener('click', function () {
+        if (rendering) return;
+        pageNum = i;
+        renderPage(pageNum);
+      });
+      thumbStrip.appendChild(b);
+    }
+  }
+
+  prevBtn.addEventListener('click', function () {
+    if (rendering || pageNum <= 1) return;
+    pageNum -= 1;
+    renderPage(pageNum);
+  });
+
+  nextBtn.addEventListener('click', function () {
+    if (rendering || !pdfDoc || pageNum >= pdfDoc.numPages) return;
+    pageNum += 1;
+    renderPage(pageNum);
+  });
+
+  zoomInBtn.addEventListener('click', function () {
+    scale = Math.min(scale + 0.2, 2.4);
+    renderPage(pageNum);
+  });
+
+  zoomOutBtn.addEventListener('click', function () {
+    scale = Math.max(scale - 0.2, 0.5);
+    renderPage(pageNum);
+  });
+
+  pdfjsLib.getDocument(PDF_URL).promise.then(function (doc) {
+    pdfDoc = doc;
+    buildThumbs(doc.numPages);
+    renderPage(pageNum);
+  }).catch(function (err) {
+    loadStatus.textContent = 'Could not load the report inline. Use the download link above instead.';
+    console.error(err);
+  });
+})();
+</script>
+
+</body>
+</html>
